@@ -1,24 +1,15 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { sidebarItems } from "../app/constants";
-import { logoutUser, getExistingUser, getGooglePicture } from "../app/appwrite/auth";
-import { account, avatars } from "../app/appwrite/client";
+import { logoutUser } from "../app/appwrite/auth";
+import { useAppContext } from "../src/contexts/appContext";
 
-type User = {
-  name?: string;
-  email?: string;
-  imageUrl?: string;
-  imgUrl?: string;
-  $id?: string;
-};
 
 type NavItemsProps = {
   handleClick?: () => void;
 };
 
 const NavItems = ({ handleClick }: NavItemsProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profileImg, setProfileImg] = useState<string>('');
+    const { user} = useAppContext();
   const navigate = useNavigate();
   const logOut = async () => {
     await logoutUser();
@@ -26,40 +17,6 @@ const NavItems = ({ handleClick }: NavItemsProps) => {
   };
   // const [img, setImg] = useState("");
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const existingUser: User = await account.get();
-        console.log('navitmes', existingUser);
-
-        const { providerAccessToken } = (await account.getSession("current")) || {};
-        // console.log("storeUserData: providerAccessToken:", providerAccessToken);
-
-        const profilePicture = providerAccessToken
-          ? await getGooglePicture(providerAccessToken)
-          : null;
-        console.log("navitmes: profilePicture:", profilePicture);
-        if (!existingUser) {
-          setUser(null);
-          return;
-        }
-
-        const profileImgUrl = profilePicture || avatars.getInitials(existingUser?.name);
-
-        // setImg(profileImgUrl);
-        setUser(existingUser)
-        setProfileImg(profileImgUrl)
-        // setUser(existingUser);
-      } catch (e) {
-        console.error("Error loading user in NavItems:", e);
-      }
-    };
-
-    load();
-  }, []);
-  useEffect(() => {
-
-  }, [user])
 
   return (
     <section className="nav-items">
@@ -96,7 +53,7 @@ const NavItems = ({ handleClick }: NavItemsProps) => {
         </nav>
 
         <footer className="nav-footer">
-          <img src={profileImg} alt={user?.name ?? "User"} />
+          <img src={user?.imageUrl || ''} alt={user?.name ?? "User"} />
           <article>
             <h2>{user?.name ?? "Guest"}</h2>
             <p>{user?.email ?? ""}</p>

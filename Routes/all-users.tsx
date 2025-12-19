@@ -10,24 +10,13 @@ import {
 } from "@syncfusion/ej2-react-grids";
 import { motion } from "framer-motion";
 
-import { getAllUsers } from "../app/appwrite/auth";
-import { useEffect, useState } from "react";
 import { avatars } from "../app/appwrite/client";
 import { formatDate } from "../app/lib/utils";
+import { useAppContext } from "../src/contexts/appContext";
 
 
 const AllUsers = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  useEffect(() => {
-    const getusers = async () => {
-
-      const allusers = await getAllUsers(10, 0)
-      setUsers(allusers.users);
-      console.log('allusers', allusers);
-    }
-    getusers()
-
-  }, [])
+  const {users} = useAppContext()
   return (
     <div className="admin-layout md:pt-10">
       <MobileBar />

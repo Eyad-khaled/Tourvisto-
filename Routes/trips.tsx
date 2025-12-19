@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import { parseMarkdownToJson } from "../app/lib/utils";
 import { getAllTrips } from "../app/appwrite/allTrips";
 import TripCard from "../components/TripsCard";
-import { Link} from "react-router-dom";
 
 
 

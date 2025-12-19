@@ -9,79 +9,22 @@ import "../src/App.css";
 import NavItems from "../components/NavItems";
 // import { getExistingUser } from "../app/appwrite/auth";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getAllTrips } from "../app/appwrite/allTrips";
-import { parseMarkdownToJson } from "../app/lib/utils";
-import { account, appwriteConfig, client } from "../app/appwrite/client";
-import { TablesDB } from "appwrite";
-import { getGooglePicture } from "../app/appwrite/auth";
+import { useAppContext } from "../src/contexts/appContext";
 
 
-type TripRecord = {
-  $id: string;
-  imageUrls?: string[];
-  tripDetails?: any;
-};
+
+// type TripRecord = {
+//   $id: string;
+//   imageUrls?: string[];
+//   tripDetails?: any;
+// };
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
-  useEffect(() => {
+  const { user, trips } = useAppContext();
 
-    const addUser = async () => {
-      try {
-        const currentUser = await account.get();
-        // if (!currentUser.$id) console.log('NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO');
-        // console.log('currentUser ############', currentUser);
-        const { providerAccessToken } = (await account.getSession("current")) || {};
-        const profilePicture = providerAccessToken
-          ? await getGooglePicture(providerAccessToken)
-          : null;
-        const tableDB = new TablesDB(client)
-        setUser(currentUser ? currentUser : null);
-        await tableDB.createRow({
-          databaseId: appwriteConfig.databaseId,
-          tableId: appwriteConfig.userCollectionId,
-          rowId: currentUser?.$id,
-          data: {
-            accountId: currentUser?.$id,
-            email: currentUser?.email,
-            name: currentUser?.name,
-            imageUrl: profilePicture,
-            // Database schema expects a typo'd field `joindAt` in some environments;
-            // include both to be safe (legacy + correct spelling).
-            joinedAt: new Date().toISOString(),
-          }
-        })
-        console.log("USER CREATED");
-      } catch (error) {
-        console.log('error creating user ', error);
 
-      }
-    }
 
-    addUser();
-  }
-    , [])
-  const [allTrips, setAllTrips] = useState<{ trips: TripRecord[] }>({ trips: [] });
 
-  useEffect(() => {
-
-    const getTrip = async () => {
-      const response = await getAllTrips();
-      const normalizedTrips = (response?.allTrips ?? []).slice(0, 4)
-        .map((trip) => ({
-          ...trip,
-          tripDetails: parseMarkdownToJson(trip.tripDetails),
-        }));
-
-      setAllTrips({ trips: normalizedTrips });
-
-      // console.log('trips', normalizedTrips);
-
-    };
-
-    getTrip();
-  }, []);
   const { totalUsers, usersJoined, totalTrips, tripsCreated, userRole } =
     dashboardstats;
   return (
@@ -129,7 +72,7 @@ const Dashboard = () => {
           </h1>
           <div className="trip-grid overflow-hidden">
 
-            {allTrips.trips?.map(({ $id, imageUrls, tripDetails }) => (
+            {trips?.slice(0, 4).map(({ $id, imageUrls, tripDetails }) => (
               <Link key={$id} to={`/trips/${$id}`}>
                 <motion.div
                   key={$id}
