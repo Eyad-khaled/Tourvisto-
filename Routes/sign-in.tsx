@@ -1,10 +1,88 @@
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import { Link} from "react-router-dom";
-import { loginWithGoogle } from "../app/appwrite/auth";
+import { Link, redirect, useNavigate } from "react-router-dom";
+import { loginWithGoogle, getExistingUser, storeUserData } from "../app/appwrite/auth";
+import { account } from "../app/appwrite/client";
+import { useEffect } from "react";
 
+export async function clientLoader(){
+  try{
+    console.log('Sign-in clientLoader: Checking for OAuth callback');
 
+    // Check if we have an active session (OAuth callback)
+    const sessions = await account.listSessions();
+    const hasActiveSession = sessions?.sessions?.some(session => session.current);
+
+    console.log('Sign-in clientLoader: Has active session?', hasActiveSession);
+    console.log('Sign-in clientLoader: Sessions:', sessions);
+
+    if (hasActiveSession) {
+      console.log('Sign-in clientLoader: Processing OAuth callback');
+      // We have a session, check if user exists in database
+      const user = await account.get();
+      console.log('Sign-in clientLoader: Authenticated user:', user);
+
+      const existingUser = await getExistingUser();
+      console.log('Sign-in clientLoader: Existing user in DB:', existingUser);
+
+      // If user exists in database, redirect to dashboard
+      if (existingUser) {
+        console.log('Sign-in clientLoader: Redirecting to dashboard (user exists)');
+        return redirect("/dashboard");
+      }
+
+      // If user doesn't exist, create them first
+      try {
+        console.log('Sign-in clientLoader: Creating user in database');
+        await storeUserData();
+        console.log('Sign-in clientLoader: Redirecting to dashboard (user created)');
+        return redirect("/dashboard");
+      } catch (createError) {
+        console.error("Error creating user:", createError);
+        // Still redirect to dashboard even if user creation fails
+        console.log('Sign-in clientLoader: Redirecting to dashboard (creation failed)');
+        return redirect("/dashboard");
+      }
+    }
+
+    console.log('Sign-in clientLoader: No active session, staying on sign-in page');
+    // No active session, stay on sign-in page
+    return null;
+  } catch(e){
+    console.log('Error during client load' , e);
+    return null;
+  }
+}
 
 const SignIn = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Handle OAuth callback on component mount
+    const handleOAuthCallback = async () => {
+      try {
+        const sessions = await account.listSessions();
+        const hasActiveSession = sessions?.sessions?.some(session => session.current);
+
+        if (hasActiveSession) {
+          const user = await account.get();
+          const existingUser = await getExistingUser();
+
+          if (!existingUser) {
+            await storeUserData();
+          }
+
+          // Use navigate instead of redirect for better iOS compatibility
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error handling OAuth callback:", error);
+      }
+    };
+
+    handleOAuthCallback();
+  }, [navigate]);
+
+  return (
 
 
 

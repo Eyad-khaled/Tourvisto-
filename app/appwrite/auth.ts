@@ -67,11 +67,25 @@ export const getGooglePicture = async (accessToken: string) => {
 
 export const loginWithGoogle = async () => {
     try {
-        account.createOAuth2Session(
-            OAuthProvider.Google,
-            `${window.location.origin}`,
-            `${window.location.origin}`,
-        );
+        // Detect if we're on iOS Safari
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        if (isIOS && isSafari) {
+            // For iOS Safari, use a more compatible OAuth flow
+            account.createOAuth2Session(
+                OAuthProvider.Google,
+                `${window.location.origin}/sign-in`,
+                `${window.location.origin}/sign-in`,
+            );
+        } else {
+            // For other browsers, use the standard flow
+            account.createOAuth2Session(
+                OAuthProvider.Google,
+                `${window.location.origin}`,
+                `${window.location.origin}`,
+            );
+        }
     } catch (error) {
         console.error("Error during OAuth2 session creation:", error);
     }
