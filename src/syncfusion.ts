@@ -7,7 +7,7 @@ registerLicense(
 );
 
 // Export ONLY through this file
-export { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns";
+
 
 export {
   MapsComponent,

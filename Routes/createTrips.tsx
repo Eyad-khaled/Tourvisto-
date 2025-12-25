@@ -8,7 +8,6 @@
 // import { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns";
 // import { SidebarComponent } from "@syncfusion/ej2-react-navigations";
 import {
-  ComboBoxComponent,
   MapsComponent,
   LayersDirective,
   LayerDirective,
@@ -23,9 +22,10 @@ import { comboBoxItems, selectItems } from "../app/constants";
 import { formatKey } from "../app/lib/utils";
 import { world_map } from "../app/constants/world_map";
 import { account } from "../app/appwrite/client";
-import {  useNavigate } from "react-router-dom";
-import {action} from './api/create-trip'
+import { useNavigate } from "react-router-dom";
+import { action } from './api/create-trip'
 import type { FormEvent } from "react";
+import { Combobox } from "../components/ComboBox";
 
 type CountryOption = {
   name: string;
@@ -93,10 +93,10 @@ const CreateTrips = () => {
     loadCountries();
   }, []);
   useEffect(() => {
-    
+
     const setForm = async () =>
       setFormData({
-        country: allCountries[0]?.name || "",
+        country: "",
         travelStyle: "",
         interest: "",
         budget: "",
@@ -129,7 +129,7 @@ const CreateTrips = () => {
       !FormData.budget ||
       !FormData.duration ||
       !FormData.groupType ||
-      !FormData.interest || 
+      !FormData.interest ||
       !FormData.travelStyle
     ) {
       setError("Please Provide Data For All Fields");
@@ -143,19 +143,19 @@ const CreateTrips = () => {
       return;
     }
     try {
-     console.log('######################',);
-       const response = await (action({...FormData, userId: user.$id},setLoading))
+      console.log('######################',);
+      const response = await (action({ ...FormData, userId: user.$id }, setLoading))
       //  const result = await response.json()
       //  console.log('resulttt' ,result);
-       if (response.$id) navigate(`/trips/${response.$id}`)
-        else console.error(Error);
-        
-       console.log(response);
-       
-       
+      if (response.$id) navigate(`/trips/${response.$id}`)
+      else console.error(Error);
+
+      console.log(response);
+
+
       //  const response = await action(FormDat a ,setLoading)
       //  console.log('heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ', response);
-       
+
       // if (result.id) {
       //   navigate(`/trips/${result.id}`);
       // } else {
@@ -165,7 +165,7 @@ const CreateTrips = () => {
     } catch (error) {
       setError("An error occurred while generating the trip");
       console.error(error);
-    } 
+    }
   };
   return (
     <div className="admin-layout">
@@ -182,19 +182,14 @@ const CreateTrips = () => {
           <form action="" className="trip-form" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="country">country</label>
-              <ComboBoxComponent
+              <Combobox
                 id="country"
                 dataSource={CountriesData}
-                fields={{ text: "text", value: "value" }}
                 placeholder="Select A Country"
-                className="combo-box"
-                allowFiltering
-                change={(e) => {
-                  if (e.value) {
-                    handleChange("country", e.value);
-                  }
-                }}
+                value={FormData.country}
+                change={(e) => handleChange("country", e.value)}
               />
+
             </div>
             <div>
               <label htmlFor="duration">Duration</label>
@@ -220,21 +215,22 @@ const CreateTrips = () => {
             {selectableKeys.map((key) => (
               <div key={key}>
                 <label htmlFor={key}>{formatKey(key)}</label>
-                <ComboBoxComponent
+
+                <Combobox
                   id={key}
-                  dataSource={(comboBoxItems as Record<TripSelectKey, string[]>)[key as TripSelectKey]}
-                  fields={{ text: key, value: key }}
+                  dataSource={(
+                    comboBoxItems as Record<TripSelectKey, string[]>
+                  )[key].map((v) => ({ text: v, value: v }))}
+
                   placeholder={`Select A ${formatKey(key)}`}
-                  className="combo-box"
-                  allowFiltering
-                  change={(e) => {
-                    if (e.value) {
-                      handleChange(key, e.value as TripFormData[keyof TripFormData]);
-                    }
-                  }}
+                  value={FormData[key]}
+                  change={(e) =>
+                    handleChange(key, e.value as TripFormData[keyof TripFormData])
+                  }
                 />
               </div>
             ))}
+
             <div>
               <label htmlFor="location">Location On World Map</label>
               <MapsComponent>
@@ -267,9 +263,8 @@ const CreateTrips = () => {
               >
                 <img
                   className={`size-5 ${Loading ? "animate-spin" : ""}`}
-                  src={`/assets/icons/${
-                    Loading ? "loader.svg" : "magic-star.svg"
-                  }`}
+                  src={`/assets/icons/${Loading ? "loader.svg" : "magic-star.svg"
+                    }`}
                   alt=""
                 />
                 <span className="p-16-semibold text-white">
