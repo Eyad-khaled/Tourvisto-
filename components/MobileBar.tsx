@@ -35,34 +35,12 @@ const MobileBar = () => {
       window.removeEventListener('resize', checkMobile);
     }
   }, [window.innerWidth]);
-  async function clientLoader() {
-    try {
-      const user = await account.get();
-      if (!user) { return navigate("/sign-in") }
-      if (user && location.pathname === "/sign-in") {
-        return navigate("/");
-      }
-      const existingUser = await getExistingUser();
-      //  console.log('existingUser in clientLoader', existingUser?.status);
-
-      //  console.log('user',user);
-
-
-      return existingUser?.$id ? existingUser : await storeUserData()
-    } catch (e) {
-
-      console.log('Error in client loader', e);
-      return navigate("/sign-in");
-    }
-  }
-
+ 
   let sidebar: SidebarRef | null = null;
   const handleClick = () => {
     sidebar?.hide();
   };
-  useEffect(() => {
-    clientLoader()
-  }, [])
+
   const SidebarAny = SidebarComponent as unknown as ComponentType<any>;
 
   return (
