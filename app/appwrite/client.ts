@@ -30,5 +30,5 @@ async function checkUserStatusAndPerformAction() {
 }
 
 // Call this function where the error is triggered
-
+checkUserStatusAndPerformAction()
 export { client, account, database, storage, avatars };
