@@ -38,7 +38,7 @@ const Dashboard = () => {
 
       <main className="dashboard wrapper md:pt-10">
         <Header
-          title={`Welcome ${user ? user.name.split(" ")[0] : "Guest"} 👋 heeeeeeeeeeeeeeeeeeeee`}
+          title={`Welcome ${user ? user.name.split(" ")[0] : "Guest"} 👋`}
           desc="Track Activity , trends and popular destinations"
 
         />

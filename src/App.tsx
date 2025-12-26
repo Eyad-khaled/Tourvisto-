@@ -14,10 +14,11 @@ import Trips from '../Routes/trips'
 // import CreateTrips from '../Routes/createTrips'
 import TripDetails from '../Routes/tripDetails'
 import { lazy, Suspense } from "react";
+import { useAppContext } from "./contexts/appContext";
 
 const CreateTrips = lazy(() => import("../Routes/createTrips"));
 function App() {
-
+  const { loadingUser } = useAppContext()
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,7 +31,7 @@ function App() {
         const sessions = await account.listSessions();
         if (sessions?.sessions?.length) {
           const user = await account.get();
-          if (user.$id && (location.pathname === "/" || user.$id && location.pathname === "/sign-in")) {
+          if (user.$id && (location.pathname === "/" || location.pathname === "/sign-in")) {
             navigate("/dashboard", { replace: true });
           }
           const existingUser = await getExistingUser(user.$id);
@@ -51,6 +52,7 @@ function App() {
 
 
   return (
+
     <div className="admin-layout">
       {/* <div className='admin-layout'>
     <MobileBar />
@@ -62,7 +64,8 @@ function App() {
       {/* <aside className="children">
         <Outlet />
       </aside> */}
-      <Suspense fallback={<div>Loading...</div>}>
+      {loadingUser ? (<div>Loading user...</div>
+      ) : <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/trips/:tripId" element={<TripDetails />} />
@@ -73,7 +76,8 @@ function App() {
           <Route path="/trips" element={<Trips />} />
           <Route path="/trips/create" element={<CreateTrips />} />
         </Routes>
-      </Suspense>
+      </Suspense>}
+
       {/* </div> */}
     </div>
   );
