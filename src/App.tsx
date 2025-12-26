@@ -48,7 +48,7 @@ function App() {
     checkUser();
   }, [location.pathname, navigate]);
 
-  if (loadingSession) return <div>Loading session...</div>;
+  if (loadingSession || loadingUser) return <div>Loading session...</div>;
 
 
   return (
@@ -64,7 +64,6 @@ function App() {
       {/* <aside className="children">
         <Outlet />
       </aside> */}
-      {loadingUser ? <div>Loading user...</div> : null}
 
 
       <Suspense fallback={<div>Loading...</div>}>
