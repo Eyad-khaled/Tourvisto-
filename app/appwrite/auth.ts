@@ -72,7 +72,7 @@ export const loginWithGoogle = async () => {
             // For iOS Safari, use a more compatible OAuth flow
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/sign-in`,
+                `${window.location.origin}/dashboard`,
                 `${window.location.origin}/sign-in`,
             );
         } else {
