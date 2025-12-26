@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { action } from './api/create-trip'
 import type { FormEvent } from "react";
 import { Combobox } from "../components/ComboBox";
+import { useAppContext } from "@/contexts/appContext";
 
 type CountryOption = {
   name: string;
@@ -136,8 +137,8 @@ const CreateTrips = () => {
       setLoading(false);
       return;
     }
-    const user = await account.get();
-    if (!user.$id) {
+    const {user} = useAppContext()
+    if (!user?.$id) {
       // console.error("error generating trips");
       setLoading(false);
       return;

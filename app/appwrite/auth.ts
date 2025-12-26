@@ -1,6 +1,7 @@
 import { OAuthProvider, Query } from "appwrite";
 import { account, database, appwriteConfig } from "./client";
 import { redirect } from "react-router";
+import { useAppContext } from "@/contexts/appContext";
 
 export const getExistingUser = async (accountId: string) => {
     try {
@@ -19,7 +20,7 @@ export const getExistingUser = async (accountId: string) => {
 export const storeUserData = async () => {
     try {
         console.log('storeUserData: called');
-        const user = await account.get();
+        const { user } = useAppContext()
         if (!user) throw new Error("User not found");
 
         // const { providerAccessToken } = (await account.getSession("current")) || {};
@@ -99,14 +100,14 @@ export const logoutUser = async () => {
 
 export const getUser = async () => {
     try {
-        const user = await account.get();
-        if (!user) return ;
+        const {user} = useAppContext()
+        if (!user) return;
 
         const { documents } = await database.listDocuments(
             appwriteConfig.databaseId,
             appwriteConfig.userCollectionId,
             [
-                Query.equal("accountId", user.$id),
+                Query.equal("accountId", user.$id || ''),
                 Query.select(["name", "email", "imageUrl", "joinedAt", "accountId"]),
             ]
         );

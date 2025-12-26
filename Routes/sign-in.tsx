@@ -1,89 +1,20 @@
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import { Link, redirect, useNavigate } from "react-router-dom";
-import { loginWithGoogle, getExistingUser, storeUserData } from "../app/appwrite/auth";
-import { account } from "../app/appwrite/client";
+import { Link, Navigate, useNavigate} from "react-router-dom";
+import { loginWithGoogle } from "../app/appwrite/auth";
+import { useAppContext } from "@/contexts/appContext";
 import { useEffect } from "react";
 
-export async function clientLoader() {
-  try {
-    console.log('Sign-in clientLoader: Checking for OAuth callback');
 
-    // Check if we have an active session (OAuth callback)
-    const sessions = await account.listSessions();
-    const hasActiveSession = sessions?.sessions?.some(session => session.current);
-
-    console.log('Sign-in clientLoader: Has active session?', hasActiveSession);
-    console.log('Sign-in clientLoader: Sessions:', sessions);
-
-    if (hasActiveSession) {
-      console.log('Sign-in clientLoader: Processing OAuth callback');
-      // We have a session, check if user exists in database
-      const user = await account.get();
-      console.log('Sign-in clientLoader: Authenticated user:', user);
-
-      const existingUser = await getExistingUser(user.$id);
-      console.log('Sign-in clientLoader: Existing user in DB:', existingUser);
-
-      // If user exists in database, redirect to dashboard
-      if (existingUser) {
-        console.log('Sign-in clientLoader: Redirecting to dashboard (user exists)');
-        return redirect("/dashboard");
-      }
-
-      // If user doesn't exist, create them first
-      try {
-        console.log('Sign-in clientLoader: Creating user in database');
-        await storeUserData();
-        console.log('Sign-in clientLoader: Redirecting to dashboard (user created)');
-        return redirect("/dashboard");
-      } catch (createError) {
-        console.error("Error creating user:", createError);
-        // Still redirect to dashboard even if user creation fails
-        console.log('Sign-in clientLoader: Redirecting to dashboard (creation failed)');
-        return redirect("/dashboard");
-      }
-    }
-
-    console.log('Sign-in clientLoader: No active session, staying on sign-in page');
-    // No active session, stay on sign-in page
-    return null;
-  } catch (e) {
-    console.log('Error during client load', e);
-    return null;
-  }
-}
 
 const SignIn = () => {
-  const navigate = useNavigate();
 
- useEffect(() => {
-  const handleOAuthCallback = async () => {
-    try {
-      let session = null;
-      for (let i = 0; i < 5; i++) { // retry 5 times
-        session = await account.getSession("current").catch(() => null);
-        if (session) break;
-        await new Promise(r => setTimeout(r, 300));
-      }
-
-      if (!session) return; // no session yet
-
-      const user = await account.get();
-      const existingUser = await getExistingUser(user.$id);
-
-      if (!existingUser) await storeUserData();
-
-      // Navigate after session is ready
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("OAuth callback error:", error);
-    }
-  };
-
-  handleOAuthCallback();
-}, [navigate]);
-
-
+const { user, loadingUser } = useAppContext();
+const navigate = useNavigate();
+useEffect(() => {
+  if (!loadingUser && user) {
+    navigate("/dashboard", { replace: true });
+  }
+}, [user, loadingUser, navigate]);
   return (
     <main className="auth">
       <section className="size-full glassmorphism flex-center px-6">

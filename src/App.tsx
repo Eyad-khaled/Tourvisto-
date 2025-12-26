@@ -18,7 +18,7 @@ import { useAppContext } from "./contexts/appContext";
 
 const CreateTrips = lazy(() => import("../Routes/createTrips"));
 function App() {
-  const { loadingUser } = useAppContext()
+  const { loadingUser, user } = useAppContext()
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,11 +30,10 @@ function App() {
       try {
         const sessions = await account.listSessions();
         if (sessions?.sessions?.length) {
-          const user = await account.get();
-          if (user.$id && (location.pathname === "/" || location.pathname === "/sign-in")) {
+          if (user?.$id && (location.pathname === "/" || location.pathname === "/sign-in")) {
             navigate("/dashboard", { replace: true });
           }
-          const existingUser = await getExistingUser(user.$id);
+          const existingUser = await getExistingUser(user?.$id || "");
           if (!existingUser?.$id) await storeUserData();
         }
       } catch (e) {

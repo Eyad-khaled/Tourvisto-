@@ -47,33 +47,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await getAllUsers(100, 0); // adjust limit & offset as needed
+        const formattedUsers = response.users.map((u: any) => ({
+          ...u,
+          imageUrl: u.imageUrl || avatars.getInitials(u.name),
+        }));
+        setUsers(formattedUsers);
+      } catch (err) {
+        console.error("Error fetching all users:", err);
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
     const fetchUser = async () => {
       try {
-        // Step 1: Wait for a valid session (retry up to 3 times)
         let session: any = null;
+
         for (let i = 0; i < 3; i++) {
           session = await account.getSession("current").catch(() => null);
           if (session) break;
-          await new Promise((r) => setTimeout(r, 300)); // small delay between retries
+          await new Promise((r) => setTimeout(r, 300));
         }
 
         if (!session) {
           setUser(null);
+          setLoadingUsers(false);
+          setLoadingUser(false);
           return;
         }
 
-        // Step 2: Get the authenticated user
+
+        // 1️⃣ Safe now
         const currentUser = await account.get();
 
-        // Step 3: Fetch providerAccessToken (for Google profile picture)
-        const { providerAccessToken } = session || {};
-        const profilePicture = providerAccessToken
-          ? await getGooglePicture(providerAccessToken)
+        const profilePicture = session.providerAccessToken
+          ? await getGooglePicture(session.providerAccessToken)
           : null;
-        console.log("providerAccessToken", providerAccessToken);
-        console.log("currentUser", currentUser);
 
-        // Step 4: Create user in database if not exist
+        // 2️⃣ Ensure user exists in DB
         const tableDB = new TablesDB(client);
         try {
           await tableDB.createRow({
@@ -88,22 +102,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               joinedAt: new Date().toISOString(),
             },
           });
-          console.log("User created in DB");
         } catch (err: any) {
-          if (!err.message.includes("document already exists")) {
-            console.error("Error creating user", err);
-          } else {
-            console.log("User already exists in DB");
+          if (!err.message?.includes("already exists")) {
+            throw err;
           }
         }
 
-        // Step 5: Fetch all users after creating current user
+        // 3️⃣ NOW it is safe to fetch users
         await fetchUsers();
 
-        // Step 6: Set user state
+        // 4️⃣ Set context user
         setUser({
           ...currentUser,
-          imageUrl: profilePicture || avatars.getInitials(currentUser?.name),
+          imageUrl: profilePicture || avatars.getInitials(currentUser.name),
         });
       } catch (err) {
         console.error("Error fetching user:", err);
@@ -112,6 +123,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setLoadingUser(false);
       }
     };
+
 
 
     const fetchTrips = async () => {
@@ -129,22 +141,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setLoadingTrips(false);
       }
     };
-    const fetchUsers = async () => {
-      try {
-        const response = await getAllUsers(100, 0); // adjust limit & offset as needed
-        const formattedUsers = response.users.map((u: any) => ({
-          ...u,
-          imageUrl: u.imageUrl || avatars.getInitials(u.name),
-        }));
-        setUsers(formattedUsers);
-      } catch (err) {
-        console.error("Error fetching all users:", err);
-        setUsers([]);
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
-    fetchUsers()
     fetchUser();
     fetchTrips();
   }, []);
